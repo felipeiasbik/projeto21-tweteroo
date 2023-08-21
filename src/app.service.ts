@@ -68,6 +68,19 @@ export class AppService {
   }
 
   getTweetsUser(username: string) {
-    return username;
+    const tweetsReturn = [];
+    const tweetsUser = this.tweets.filter(
+      (t) => t.getUser().getUsername() === String(username),
+    );
+
+    tweetsUser.map((t) => {
+      tweetsReturn.push({
+        username: t.getUser().getUsername(),
+        avatar: t.getUser().getAvatar(),
+        tweet: t.getTweet(),
+      });
+    });
+
+    return tweetsReturn;
   }
 }

@@ -1,7 +1,7 @@
 import { User } from './user.entity';
 
 export class Tweets {
-  private username: User;
+  public username: User;
   private tweet: string;
 
   constructor(username: User, tweet: string) {
