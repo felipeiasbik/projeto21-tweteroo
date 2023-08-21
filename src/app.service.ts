@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { Tweets } from './entities/tweets.entity';
 import { CreateUserDto } from './dtos/user.dtos';
@@ -24,14 +28,43 @@ export class AppService {
   }
 
   createTweet(body: CreateTweetsDto) {
-    const userCurrent = this.users.find((u) => u.username === body.username);
+    const userCurrent = this.users.find(
+      (u) => String(u.username) === String(body.username),
+    );
     if (!userCurrent) throw new UnauthorizedException('Unregistered User');
-    const tweet = new Tweets(body.username, body.tweet);
+    const userInstance = this.users.find(
+      (u) => u.getUsername() === userCurrent.getUsername(),
+    );
+    const tweet = new Tweets(userInstance, body.tweet);
     return this.tweets.push(tweet);
   }
 
-  getTweets() {
-    return this.tweets;
+  getTweets(pg: number) {
+    const page = Number(pg);
+    if (pg && (isNaN(page) || page < 1))
+      throw new BadRequestException('Informe uma página válida!');
+
+    let latestTweets: Tweets[];
+
+    if (page) {
+      const limit = 15;
+      const start = (page - 1) * limit;
+      const end = page * limit;
+      latestTweets = this.tweets.slice(start, end);
+    } else {
+      latestTweets = this.tweets.slice(-15);
+    }
+
+    const tweetsReturn = [];
+    latestTweets.map((t) => {
+      tweetsReturn.push({
+        username: t.getUser().getUsername(),
+        avatar: t.getUser().getAvatar(),
+        tweet: t.getTweet(),
+      });
+    });
+
+    return tweetsReturn;
   }
 
   getTweetsUser(username: string) {
